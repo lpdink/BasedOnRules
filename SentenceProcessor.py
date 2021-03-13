@@ -36,17 +36,17 @@ class SentenceProcessor:
             begin_index = meta_sentence.find(word)
             # 排除可能存在于子句尾部的标点符号:
             try:
-                if meta_sentence[begin_index-1]=='，':
-                    sub_sentence=meta_sentence[0:begin_index-1]
+                if meta_sentence[begin_index - 1] == '，':
+                    sub_sentence = meta_sentence[0:begin_index - 1]
                 else:
-                    sub_sentence=meta_sentence[0:begin_index]
+                    sub_sentence = meta_sentence[0:begin_index]
             except:
-                sub_sentence=meta_sentence[0:begin_index]
+                sub_sentence = meta_sentence[0:begin_index]
             sub_sentence_length = len(sub_sentence)
             # 当子句长度大于阈值时，排除远离中心词的子句
             # 计算逗号位置：
-            if '，' in sub_sentence and sub_sentence_length>self.comma_threshold:
-                comma_index = sub_sentence_length-sub_sentence[::-1].find('，')
+            if '，' in sub_sentence and sub_sentence_length > self.comma_threshold:
+                comma_index = sub_sentence_length - sub_sentence[::-1].find('，')
                 reason_sentences.append(sub_sentence[comma_index:])
             else:
                 reason_sentences.append(sub_sentence)
@@ -62,7 +62,7 @@ class SentenceProcessor:
             sub_sentence_length = len(sub_sentence)
             # 当子句长度大于阈值时，排除远离中心词的子句
             # 计算逗号位置:
-            if '，' in sub_sentence and sub_sentence_length>self.comma_threshold:
+            if '，' in sub_sentence and sub_sentence_length > self.comma_threshold:
                 comma_index = sub_sentence.find('，')
                 output_sentences.append(sub_sentence[0:comma_index])
             else:
@@ -77,6 +77,11 @@ class SentenceProcessor:
         pos_lists = []
         jieba.enable_paddle()
         for sentence in sentences:
+            sentence = sentence.replace('，', '')
+            sentence = sentence.replace('。', '')
+            sentence = sentence.replace('？', '')
+            sentence = sentence.replace('！', '')
+            sentence = sentence.replace('、', '')
             pos_list = []
             for x in psg.cut(sentence, use_paddle=True):
                 pos_list.append([x.word, x.flag])
@@ -87,7 +92,6 @@ class SentenceProcessor:
         v_list = ['v', 'vd', 'a', 'ad', 'd', 'p', 'r', 'c', 'u', 'xc', 'vn', 'an']
         n_list = ['n', 'f', 's', 't', 'nr', 'ns', 'nt', 'nw', 'nz', 'PER', 'LOC', 'ORG', 'TIME']
         sub_sentences = []
-        print(pos_lists)
         for pos_list in pos_lists:
             sub_sentence = ""
             if flag == 'v':
