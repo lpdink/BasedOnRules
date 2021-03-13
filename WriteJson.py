@@ -16,7 +16,7 @@ class WriteJson:
                    "原因中的谓语或状态": data[3], "结果中的核心名词": data[4], "结果中的谓语或状态": data[5]}
             dics[index] = dic
             index += 1
-        string = json.dumps(dics,ensure_ascii=False)
+        string = json.dumps(dics, ensure_ascii=False)
         print(string)
         f = open(self.filename, 'w', encoding="UTF-8")
         f.write(string)
