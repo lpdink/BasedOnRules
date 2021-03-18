@@ -1,6 +1,7 @@
 import jieba
 import jieba.posseg as psg
 from ltp import LTP
+from SubSentenceExtract import SubSentenceExtractor
 
 
 class SentenceProcessor:
@@ -8,8 +9,9 @@ class SentenceProcessor:
         self.comma_threshold = 12
         self.meta_sentence = meta_sentence
         self.center_words = center_words
-        self.reason_sentences = self.getReasonSentence()
-        self.output_sentences = self.getOutputSentence()
+        self.reason_sentences, self.output_sentences = self.getSubSentence(sentences=self.meta_sentence,center_words=self.center_words)
+        # self.reason_sentences = self.getReasonSentence()
+        # self.output_sentences = self.getOutputSentence()
         self.reason_noun = self.getWordsByLTP(flag='n', sentences=self.reason_sentences)
         self.reason_verb = self.getWordsByLTP(flag='v', sentences=self.reason_sentences)
         self.output_noun = self.getWordsByLTP(flag='n', sentences=self.output_sentences)
@@ -97,6 +99,7 @@ class SentenceProcessor:
     def getWordsByLTP(self, flag, sentences):
         try:
             seg, dep = self.dependencyAnalysis(sentences)
+            print("seg,dep",seg,dep)
         except:
             return [""]
         sub_sentences = []
@@ -154,6 +157,20 @@ class SentenceProcessor:
                  self.output_noun, self.output_verb]
         return array
 
+    '''因果句切分 '''
+    def getSubSentence(self,sentences,center_words):
+        extractor = SubSentenceExtractor()
+        sentences_pair=[]
+        for i in range(len(center_words)):
+            sentences_pair.append((sentences,center_words[i]))
+        subsent = extractor.extract_subsentence(sentences_pair)
+        reason_sentence = subsent[0]["cause"]
+        output_sentence = subsent[0]["effect"]
+        
+        return reason_sentence, output_sentence
+
+
+
 
 if __name__ == '__main__':
     # sentence = "肖泽宇十分笨，导致他写代码很慢，引起工作效率的下降"
@@ -162,5 +179,7 @@ if __name__ == '__main__':
     words = ["影响"]
     sp = SentenceProcessor(sentence, words)
     print(sp.reason_sentences)
+    print(sp.reason_noun,sp.reason_verb)
     print(sp.output_sentences)
+    print(sp.output_noun,sp.output_verb)
     print(sp.getFruitList())
