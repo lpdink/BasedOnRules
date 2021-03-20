@@ -1,7 +1,7 @@
 import jieba
 import jieba.posseg as psg
 from ltp import LTP
-from SubSentenceExtract import SubSentenceExtractor
+from core.SubSentenceExtract import SubSentenceExtractor
 
 
 class SentenceProcessor:
