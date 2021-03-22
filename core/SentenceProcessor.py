@@ -1,5 +1,7 @@
 import jieba
 import jieba.posseg as psg
+from ltp import LTP
+from core.SubSentenceExtract import SubSentenceExtractor
 
 
 class SentenceProcessor:
@@ -7,8 +9,14 @@ class SentenceProcessor:
         self.comma_threshold = 12
         self.meta_sentence = meta_sentence
         self.center_words = center_words
-        self.reason_sentences = self.getReasonSentence()
-        self.output_sentences = self.getOutputSentence()
+        self.reason_sentences, self.output_sentences = self.getSubSentence(sentences=self.meta_sentence,center_words=self.center_words)
+        # self.reason_sentences = self.getReasonSentence()
+        # self.output_sentences = self.getOutputSentence()
+        self.reason_noun = self.getWordsByLTP(flag='n', sentences=self.reason_sentences)
+        self.reason_verb = self.getWordsByLTP(flag='v', sentences=self.reason_sentences)
+        self.output_noun = self.getWordsByLTP(flag='n', sentences=self.output_sentences)
+        self.output_verb = self.getWordsByLTP(flag='v', sentences=self.output_sentences)
+        '''
         self.reason_noun = self.getWords(flag='n',
                                          pos_lists=self.partOfSpeechAnalysis(self.reason_sentences))
         self.reason_verb = self.getWords(flag='v',
@@ -17,17 +25,7 @@ class SentenceProcessor:
                                          pos_lists=self.partOfSpeechAnalysis(self.output_sentences))
         self.output_verb = self.getWords(flag='v',
                                          pos_lists=self.partOfSpeechAnalysis(self.output_sentences))
-
-        '''
-        self.reason_noun = self.getWords(flag='n',
-                                         pos_list=self.partOfSpeechAnalysis(self.divisionWords(self.reason_sentence)))
-        self.reason_verb = self.getWords(flag='v',
-                                         pos_list=self.partOfSpeechAnalysis(self.divisionWords(self.reason_sentence)))
-        self.output_noun = self.getWords(flag='n',
-                                         pos_list=self.partOfSpeechAnalysis(self.divisionWords(self.output_sentence)))
-        self.output_verb = self.getWords(flag='v',
-                                         pos_list=self.partOfSpeechAnalysis(self.divisionWords(self.output_sentence)))
-        '''
+                                         '''
 
     def getReasonSentence(self):
         meta_sentence = self.meta_sentence
@@ -88,6 +86,52 @@ class SentenceProcessor:
             pos_lists.append(pos_list)
         return pos_lists
 
+    # 依存分析，返回list,list：分词结果，依存分析结果
+    def dependencyAnalysis(self, sentences):
+        ltp = LTP()
+        seg, hidden = ltp.seg(sentences)
+        dep = ltp.dep(hidden)
+        return seg, dep
+
+    # 根据依存分析计算结果&&flag，返回核心词/谓语或状态
+    # 借助SBV关系提取主语，其余部分认为是谓语或状态，或者，取SBV标注的谓语为谓语或状态，或者取主语之后，认为是谓语或状态。
+    # 注意LTP的索引从1开始
+    def getWordsByLTP(self, flag, sentences):
+        try:
+            seg, dep = self.dependencyAnalysis(sentences)
+            print("seg,dep",seg,dep)
+        except:
+            return [""]
+        sub_sentences = []
+        # 遍历列表中的每个句子
+        for i in range(len(seg)):
+            sub_sentence = ""
+            # 当句中找不到SBV关系时，默认认为分词列表的第一个是主语。
+            noun_index = 0
+            verb_index = 1
+            for item in dep[i]:
+                if item[2] == 'SBV':
+                    noun_index = item[0]-1
+                    verb_index = item[1]-1
+            if flag == 'v':
+                '''
+                # 这是取其余部分的方案：
+                for item in seg[i]:
+                    if item != seg[i][noun_index]:
+                        sub_sentence += item
+                '''
+                # 这是取SBV的谓语的方案
+                try:
+                    sub_sentence = seg[i][verb_index]
+                except:
+                    sub_sentence = [""]
+            elif flag == 'n':
+                sub_sentence = seg[i][noun_index]
+            else:
+                raise Exception("invalid flag value of method getWords() in SentenceProcessor")
+            sub_sentences.append(sub_sentence)
+        return sub_sentences
+
     def getWords(self, flag, pos_lists):
         v_list = ['v', 'vd', 'a', 'ad', 'd', 'p', 'r', 'c', 'u', 'xc', 'vn', 'an']
         n_list = ['n', 'f', 's', 't', 'nr', 'ns', 'nt', 'nw', 'nz', 'PER', 'LOC', 'ORG', 'TIME']
@@ -113,6 +157,20 @@ class SentenceProcessor:
                  self.output_noun, self.output_verb]
         return array
 
+    '''因果句切分 '''
+    def getSubSentence(self,sentences,center_words):
+        extractor = SubSentenceExtractor()
+        sentences_pair=[]
+        for i in range(len(center_words)):
+            sentences_pair.append((sentences,center_words[i]))
+        subsent = extractor.extract_subsentence(sentences_pair)
+        reason_sentence = subsent[0]["cause"]
+        output_sentence = subsent[0]["effect"]
+        
+        return reason_sentence, output_sentence
+
+
+
 
 if __name__ == '__main__':
     # sentence = "肖泽宇十分笨，导致他写代码很慢，引起工作效率的下降"
@@ -121,5 +179,7 @@ if __name__ == '__main__':
     words = ["影响"]
     sp = SentenceProcessor(sentence, words)
     print(sp.reason_sentences)
+    print(sp.reason_noun,sp.reason_verb)
     print(sp.output_sentences)
+    print(sp.output_noun,sp.output_verb)
     print(sp.getFruitList())
