@@ -42,9 +42,11 @@
 		- filename：str，json文件的路径
 		- data：list，按行读取json文件的结果
 		- array：目标输出
+		- values_dic_list: 字典集合，格式为[{"rn":[]，"rv":[]，"on":[],"ov":[]}]
 	- 方法：
 		- getData()->list 读取原json文件，将结果存入data属性中。
 		- getArray()->list，从属性data中，提取原句，中心词，存储到属性array中。
+		- getAllValueToDicList()->list: 从属性data中，提取rn，rv，on，ov，存储到属性values_dic_list中。
 - json2excel.py：将结果的json文件，提取原因的核心名词，原因的谓语或状态，中心词，结果的核心名词，结果的谓语或状态，存储到excel表中。
 	- 输入：json文件
 	- 输出：转换好的excel文件
@@ -72,11 +74,19 @@
 - WriteJson:
 	- 输入：getFruitList()的输出
 	- 输出：按照json定义，写入json.
+- Evaluator:
+	- 包含三种评价方法：
+		- recordMatch(self, forecast_dic_list: list, test_dic_list: list): 测试数据的全label匹配才认为成功，返回数据条数的准确率
+		- labelMatch(self, forecast_dic_list: list, test_dic_list: list): 统计预测准确的label在总label数量中的占比
+		- kindsOfLabelMath(self, forecast_dic_list: list, test_dic_list: list): 分别统计4种label的预测准确率
+- ShowInformation:
+	- 输入：句子
+	- 输出：原句、分词结果、词性分析和依存分析的结果，便于人阅读.
 ## TODO
-- 【未完成】按照readme-算法设计-算法结果评价中的三种设计，实现./evaluate/Evaluator.py中的设计，具体需求见文件。
+- 【已完成】按照readme-算法设计-算法结果评价中的三种设计，实现./evaluate/Evaluator.py中的设计，具体需求见文件。
 - 【已完成】请张智敏就已有的因果划分算法，在readme-算法设计-因果划分部分做以补充。
-- 【未完成】请在./IO/Analysis.py的基础上，添加values\_dic_list属性，实现它的初始化方法getAllValueToDicList，具体需求见文件。这将用于读取测试/预测集数据，进而评估算法性能。
-- 【未完成】请根据readme-算法设计-基本信息中的设计，实现./tools/ShowInformation.py中的设计，具体需求见文件。
+- 【已完成】请在./IO/Analysis.py的基础上，添加values\_dic_list属性，实现它的初始化方法getAllValueToDicList，具体需求见文件。这将用于读取测试/预测集数据，进而评估算法性能。
+- 【已完成】请根据readme-算法设计-基本信息中的设计，实现./tools/ShowInformation.py中的设计，具体需求见文件。
 - 【长期需求】请在3.ShowInformation.py实现后，以ShowInformation为工具，分析./res/下原数据的模式，结合基本信息，设计匹配算法。使用./evaluate/Evaluator.py评价设计出的算法结果。
 
 ## 需要注意的
