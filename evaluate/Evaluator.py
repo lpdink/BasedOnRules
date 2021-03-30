@@ -47,8 +47,8 @@ class Evaluator:
                     sum[3] += 1
         for i in range(0, 4):
             precision.append(sum[i] / len(forecast_dic_list))
-        return precision
-
+        #return precision
+        return precision[0], precision[1], precision[2], precision[3]
 
 if __name__ == "__main__":
     path = os.path.dirname(os.getcwd()) + "\\res\\5201-5600.json"
